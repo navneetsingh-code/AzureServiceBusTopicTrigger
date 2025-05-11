@@ -27,13 +27,13 @@ const transporter = nodemailer.createTransport({
 
 // ── 3) Hook up your Service Bus Topic trigger ───────────────────────────────
 app.serviceBusTopic("SendTopicEmailFunction", {
-  connection:       "AzureWebJobsServiceBus",     // must match your local.settings.json / App Setting
+  connection:       "AzureWebJobsServiceBus",     // must match your App Setting
   topicName:        "notification-topic",
   subscriptionName: "Notification-subscription",
-  handler: async (message, context) => {
+  handler: async (context, message) => {
     // Track arrival of the message
     telemetryClient.trackEvent({
-      name: "ServiceBusMessageReceived",
+      name:       "ServiceBusMessageReceived",
       properties: { payload: JSON.stringify(message) }
     });
     context.log(`[Info] Service Bus message arrived: ${JSON.stringify(message)}`);

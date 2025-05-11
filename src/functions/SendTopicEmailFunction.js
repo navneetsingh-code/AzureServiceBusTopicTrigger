@@ -30,7 +30,7 @@ app.serviceBusTopic("SendTopicEmailFunction", {
   connection:       "AzureWebJobsServiceBus",     // must match your App Setting
   topicName:        "notification-topic",
   subscriptionName: "Notification-subscription",
-  handler: async (context, message) => {
+  handler: async (message, context) => {
     // Track arrival of the message
     telemetryClient.trackEvent({
       name:       "ServiceBusMessageReceived",
@@ -42,7 +42,7 @@ app.serviceBusTopic("SendTopicEmailFunction", {
     const { to, subject, body } = message;
     if (!to || !subject || !body) {
       const err = new Error("Missing one or more required email fields (to, subject, body)");
-      context.log(`[Error] ${err.message}`);
+      context.log.error(`[Error] ${err.message}`);
       telemetryClient.trackException({ exception: err });
       return;
     }
@@ -70,10 +70,9 @@ app.serviceBusTopic("SendTopicEmailFunction", {
         properties: { to, subject, durationMs: durationMs.toString() }
       });
     } catch (error) {
-      context.log(`[Error] ❌ Failed to send email: ${error.message}`);
-      console.error(error);
+      context.log.error(`[Error] ❌ Failed to send email: ${error.message}`);
       telemetryClient.trackException({ exception: error });
-      throw error;
+      throw error;  // fail the function so the message will be retried
     }
   }
 });

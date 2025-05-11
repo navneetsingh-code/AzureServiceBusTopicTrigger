@@ -27,22 +27,22 @@ const transporter = nodemailer.createTransport({
 
 // ── 3) Hook up your Service Bus Topic trigger ───────────────────────────────
 app.serviceBusTopic("SendTopicEmailFunction", {
-  connection:          "AzureWebJobsServiceBus",     // must match your local.settings.json / App Setting
-  topicName:           "notification-topic",
-  subscriptionName:    "Notification-subscription",
+  connection:       "AzureWebJobsServiceBus",     // must match your local.settings.json / App Setting
+  topicName:        "notification-topic",
+  subscriptionName: "Notification-subscription",
   handler: async (message, context) => {
     // Track arrival of the message
     telemetryClient.trackEvent({
       name: "ServiceBusMessageReceived",
       properties: { payload: JSON.stringify(message) }
     });
-    context.log("Service Bus message arrived:", message);
+    context.log(`[Info] Service Bus message arrived: ${JSON.stringify(message)}`);
 
     // Destructure the email fields
     const { to, subject, body } = message;
     if (!to || !subject || !body) {
       const err = new Error("Missing one or more required email fields (to, subject, body)");
-      context.log.error(err.message);
+      context.log(`[Error] ${err.message}`);
       telemetryClient.trackException({ exception: err });
       return;
     }
@@ -58,20 +58,22 @@ app.serviceBusTopic("SendTopicEmailFunction", {
     // Send and measure timing
     const start = Date.now();
     try {
-      context.log(`Sending email to ${to}…`);
+      context.log(`[Info] Sending email to ${to}…`);
       telemetryClient.trackEvent({ name: "EmailSendStart", properties: { to, subject } });
 
       await transporter.sendMail(mailOptions);
 
       const durationMs = Date.now() - start;
-      context.log(`✅ Email sent to ${to} in ${durationMs}ms`);
+      context.log(`[Info] ✅ Email sent to ${to} in ${durationMs}ms`);
       telemetryClient.trackEvent({
         name:       "EmailSendSuccess",
         properties: { to, subject, durationMs: durationMs.toString() }
       });
     } catch (error) {
-      context.log.error(`❌ Failed to send email: ${error.message}`);
+      context.log(`[Error] ❌ Failed to send email: ${error.message}`);
+      console.error(error);
       telemetryClient.trackException({ exception: error });
+      throw error;
     }
   }
 });

@@ -36,7 +36,7 @@ app.serviceBusTopic("SendTopicEmailFunction", {
       name: "ServiceBusMessageReceived",
       properties: { payload: JSON.stringify(message) }
     });
-    context.log.info("Service Bus message arrived:", message);
+    context.log("Service Bus message arrived:", message);
 
     // Destructure the email fields
     const { to, subject, body } = message;
@@ -58,13 +58,13 @@ app.serviceBusTopic("SendTopicEmailFunction", {
     // Send and measure timing
     const start = Date.now();
     try {
-      context.log.info(`Sending email to ${to}…`);
+      context.log(`Sending email to ${to}…`);
       telemetryClient.trackEvent({ name: "EmailSendStart", properties: { to, subject } });
 
       await transporter.sendMail(mailOptions);
 
       const durationMs = Date.now() - start;
-      context.log.info(`✅ Email sent to ${to} in ${durationMs}ms`);
+      context.log(`✅ Email sent to ${to} in ${durationMs}ms`);
       telemetryClient.trackEvent({
         name:       "EmailSendSuccess",
         properties: { to, subject, durationMs: durationMs.toString() }

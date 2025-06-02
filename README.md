@@ -107,7 +107,7 @@ App Insights + KQL
 
 🧑‍💻 Author
 Developed by Navneet Singh
-📫 navneet.singh@ddds.ga.gov
+📫 singh.navneetinfo@gmail.com
 🔗 GitHub: github.com/navneet-singh
 
 
